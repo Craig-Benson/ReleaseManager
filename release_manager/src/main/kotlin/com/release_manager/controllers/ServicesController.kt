@@ -2,6 +2,7 @@ package com.release_manager.controllers
 
 import com.release_manager.model.outbound.OutboundMessage
 import com.release_manager.repository.DeployedServicesRepository
+import com.release_manager.service.RetrievalService
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Digits
@@ -15,10 +16,9 @@ import java.util.*
 
 
 @RestController
-class ServicesController(val deployedServicesRepository: DeployedServicesRepository) {
+class ServicesController(val retrievalService: RetrievalService) {
 
     @GetMapping("/services")
-    //TODO tests
     @RateLimiter(name="default")
     fun getServices(
         @Valid
@@ -27,21 +27,6 @@ class ServicesController(val deployedServicesRepository: DeployedServicesReposit
         @Digits(integer = 10, fraction = 0, message = "System Version must a number")
          systemVersionNumber: Int
     ): ResponseEntity<List<OutboundMessage>> {
-
-        val services = deployedServicesRepository.findAllBySystemVersionNumber(systemVersionNumber)
-
-        if (services.isEmpty()) {
-            return ResponseEntity.notFound().build()
-        }
-
-        val sortedServices: TreeMap<LocalDateTime, OutboundMessage> = TreeMap()
-
-        services.forEach { service ->
-            sortedServices[service.deployedAt] = OutboundMessage(service.name, service.version)
-        }
-
-        val outboundMessages = ArrayList(sortedServices.values);
-
-        return ResponseEntity.ok().body(outboundMessages)
+        return retrievalService.retrieveServicesWithSystemVersionNumber(systemVersionNumber)
     }
 }
