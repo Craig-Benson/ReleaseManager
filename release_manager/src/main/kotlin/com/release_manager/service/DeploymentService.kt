@@ -6,17 +6,19 @@ import com.release_manager.repository.DeployedServicesRepository
 import com.release_manager.util.ServiceMapper
 import lombok.extern.slf4j.Slf4j
 import org.hibernate.query.sqm.tree.SqmNode.log
+import org.springframework.dao.DataAccessException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import javax.imageio.plugins.tiff.ExifInteroperabilityTagSet
 
 
 @Service
 @Slf4j
 class DeploymentService(
     private val deployedServicesRepository: DeployedServicesRepository,
-    private val serviceMapper: ServiceMapper
+    private val serviceMapper: ServiceMapper,
 ) {
     var systemVersionNumber: Int = 0
 
@@ -26,14 +28,15 @@ class DeploymentService(
             log.info("Received new message")
             systemVersionNumber = deployedServicesRepository.findLatestSystemVersion() ?: 0
 
+            isDuplicateMessage(inboundMessage, systemVersionNumber)
+
             var currentlyDeployedServices: List<InternalService> = mutableListOf()
 
             if (systemVersionNumber != 0) {
+                log.info("Retrieving currently deployed services")
                 currentlyDeployedServices =
                     deployedServicesRepository.findAllBySystemVersionNumber(systemVersionNumber)
             }
-
-            isDuplicateMessage(inboundMessage, systemVersionNumber)
 
             val newSystemVersionNumber = systemVersionNumber + 1;
             val servicesToDeploy: HashMap<String, InternalService> =
@@ -46,6 +49,9 @@ class DeploymentService(
         } catch (ex: DataIntegrityViolationException) {
             log.warn("Data integrity violation while deploying service. ${ex.message}")
             return ResponseEntity.status(HttpStatus.CONFLICT).body(systemVersionNumber)
+        } catch (ex: DataAccessException) {
+            log.warn("Data access violation while deploying service. ${ex.message}")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(-1)
         } catch (ex: Exception) {
             log.error("Unexpected error while deploying service: ${ex.message}")
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(-1)
@@ -64,6 +70,7 @@ class DeploymentService(
     }
 
     private fun persistService(internalService: InternalService) {
+        log.info("Persisting new service")
         deployedServicesRepository.save(internalService)
     }
 
