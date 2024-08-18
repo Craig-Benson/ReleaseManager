@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository
 @Repository
 interface DeployedServicesRepository : JpaRepository<InternalService, Long> {
 
-    //TODO tests
     @Query("SELECT s.systemVersionNumber FROM InternalService s ORDER BY s.systemVersionNumber DESC LIMIT 1")
     fun findLatestSystemVersion(): Int?
 

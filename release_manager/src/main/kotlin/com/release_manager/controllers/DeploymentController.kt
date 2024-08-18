@@ -18,9 +18,7 @@ class DeploymentController(
     @PostMapping("/deploy")
     @Operation(method = "Used for notifying new deployments")
     fun deploy(@Valid @RequestBody inboundMessage: InboundMessage): ResponseEntity<Int> {
-
         return deploymentService.deployService(inboundMessage)
-
     }
 
 
