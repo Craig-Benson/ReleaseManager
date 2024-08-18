@@ -1,7 +1,6 @@
 package com.release_manager.controllers
 
 import com.release_manager.model.outbound.OutboundMessage
-import com.release_manager.repository.DeployedServicesRepository
 import com.release_manager.service.RetrievalService
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter
 import jakarta.validation.Valid
@@ -11,8 +10,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.time.LocalDateTime
-import java.util.*
 
 
 @RestController
