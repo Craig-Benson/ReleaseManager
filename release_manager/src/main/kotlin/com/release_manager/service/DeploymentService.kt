@@ -5,7 +5,8 @@ import com.release_manager.model.internal.InternalService
 import com.release_manager.repository.DeployedServicesRepository
 import com.release_manager.util.ServiceMapper
 import lombok.extern.slf4j.Slf4j
-import org.hibernate.query.sqm.tree.SqmNode.log
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.dao.DataAccessException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
@@ -19,12 +20,13 @@ class DeploymentService(
     private val deployedServicesRepository: DeployedServicesRepository,
     private val serviceMapper: ServiceMapper,
 ) {
+    val logger: Logger = LoggerFactory.getLogger(DeploymentService::class.java)
     var systemVersionNumber: Int = 0
 
     fun deployService(inboundMessage: InboundMessage): ResponseEntity<Int> {
 
         try {
-            log.info("Received new message")
+            logger.info("Received new message")
             systemVersionNumber = deployedServicesRepository.findLatestSystemVersion() ?: 0
 
             isDuplicateMessage(inboundMessage, systemVersionNumber)
@@ -32,7 +34,7 @@ class DeploymentService(
             var currentlyDeployedServices: List<InternalService> = mutableListOf()
 
             if (systemVersionNumber != 0) {
-                log.info("Retrieving currently deployed services")
+                logger.info("Retrieving currently deployed services")
                 currentlyDeployedServices =
                     deployedServicesRepository.findAllBySystemVersionNumber(systemVersionNumber)
             }
@@ -46,13 +48,13 @@ class DeploymentService(
             return ResponseEntity.status(HttpStatus.CREATED).body(newSystemVersionNumber)
 
         } catch (ex: DataIntegrityViolationException) {
-            log.warn("Data integrity violation while deploying service. ${ex.message}")
+            logger.warn("Data integrity violation while deploying service. ${ex.message}")
             return ResponseEntity.status(HttpStatus.CONFLICT).body(systemVersionNumber)
         } catch (ex: DataAccessException) {
-            log.warn("Data access violation while deploying service. ${ex.message}")
+            logger.error("Data access violation while deploying service. ${ex.message}")
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(-1)
         } catch (ex: Exception) {
-            log.error("Unexpected error while deploying service: ${ex.message}")
+            logger.error("Unexpected error while deploying service: ${ex.message}")
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(-1)
         }
     }
@@ -69,7 +71,7 @@ class DeploymentService(
     }
 
     private fun persistService(internalService: InternalService) {
-        log.info("Persisting new service")
+        logger.info("Persisting new service")
         deployedServicesRepository.save(internalService)
     }
 

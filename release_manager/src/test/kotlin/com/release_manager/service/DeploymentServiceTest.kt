@@ -3,13 +3,12 @@ package com.release_manager.service
 import com.release_manager.model.inbound.InboundMessage
 import com.release_manager.repository.DeployedServicesRepository
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
 import org.springframework.security.test.context.support.WithMockUser
-
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

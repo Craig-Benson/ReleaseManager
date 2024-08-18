@@ -2,7 +2,10 @@ package com.release_manager.model.inbound
 
 import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.media.Schema
-import jakarta.validation.constraints.*
+import jakarta.validation.constraints.Digits
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Size
 import java.time.LocalDateTime
 
 data class InboundMessage(
