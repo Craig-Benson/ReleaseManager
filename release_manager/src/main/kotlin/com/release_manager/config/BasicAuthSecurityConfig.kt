@@ -13,22 +13,17 @@ class BasicAuthSecurityConfig {
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
 
-
-        http.authorizeHttpRequests(
-            Customizer
-            {
-                http.authorizeHttpRequests { authRequest ->
-                    authRequest.anyRequest().authenticated()
+        http.authorizeHttpRequests {
+            http.authorizeHttpRequests { authRequest ->
+                authRequest.anyRequest().authenticated()
+            }
+                .httpBasic(Customizer.withDefaults())
+                .sessionManagement { sessionManagement ->
+                    sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 }
-                    .httpBasic(Customizer.withDefaults())
-                    .sessionManagement { sessionManagement ->
-                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                    }
-                    .csrf { csrfConfigurer -> csrfConfigurer.disable() }
-                    //allow H2
-                    .headers { headers -> headers.frameOptions { frameOptions -> frameOptions.disable() } }
-
-            })
+                .csrf { csrfConfigurer -> csrfConfigurer.disable() }
+                .headers { headers -> headers.frameOptions { frameOptions -> frameOptions.disable() } }
+        }
         return http.build()
     }
 }
