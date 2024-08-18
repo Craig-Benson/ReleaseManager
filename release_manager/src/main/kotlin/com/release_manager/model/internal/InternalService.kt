@@ -16,5 +16,5 @@ class InternalService(
     @Id
     @GeneratedValue
     var id: Long? = null
-
+        private set
 }
