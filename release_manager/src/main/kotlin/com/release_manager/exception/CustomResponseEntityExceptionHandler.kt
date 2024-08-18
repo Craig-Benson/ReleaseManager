@@ -14,7 +14,6 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 @RestControllerAdvice
 class CustomResponseEntityExceptionHandler {
 
-
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleMethodValidationErrors(
         exception: MethodArgumentNotValidException,
@@ -26,7 +25,6 @@ class CustomResponseEntityExceptionHandler {
         return ResponseEntity(errorDetails, HttpHeaders(), HttpStatus.BAD_REQUEST)
     }
 
-    //Exception handling for Get requests
     @ExceptionHandler(HandlerMethodValidationException::class)
     fun handleMethodValidationErrors(
         exception: HandlerMethodValidationException,
