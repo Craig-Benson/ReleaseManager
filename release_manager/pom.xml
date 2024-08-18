@@ -16,7 +16,6 @@
 
     <properties>
         <kotlin.version>1.9.24</kotlin.version>
-        <java.version>17</java.version>
         <springdoc-openapi-starter-webmvc-ui.version>2.0.2</springdoc-openapi-starter-webmvc-ui.version>
     </properties>
     <dependencies>

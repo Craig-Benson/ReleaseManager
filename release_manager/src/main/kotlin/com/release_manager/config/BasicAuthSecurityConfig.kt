@@ -8,7 +8,7 @@ import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 
 @Configuration
-class BasicAuthSecurityConfig {
+class BasicAuthSecurityConfig
 
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
@@ -25,4 +25,3 @@ class BasicAuthSecurityConfig {
         }
         return http.build()
     }
-}
