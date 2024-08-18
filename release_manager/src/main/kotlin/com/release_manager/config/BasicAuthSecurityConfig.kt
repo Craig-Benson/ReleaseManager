@@ -12,7 +12,6 @@ class BasicAuthSecurityConfig {
 
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-
         http.authorizeHttpRequests {
             http.authorizeHttpRequests { authRequest ->
                 authRequest.anyRequest().authenticated()
