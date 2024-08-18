@@ -1,57 +1,78 @@
 package com.release_manager.service
 
-import com.release_manager.controllers.DeploymentController
 import com.release_manager.model.inbound.InboundMessage
 import com.release_manager.repository.DeployedServicesRepository
-import com.release_manager.util.ServiceMapper
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Assertions.*
-import org.mockito.ArgumentMatchers.*
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
-import org.mockito.kotlin.mock
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
 import org.springframework.security.test.context.support.WithMockUser
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
-import java.time.LocalDateTime
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @WithMockUser
-class DeploymentServiceTest(@Autowired serviceMapper: ServiceMapper) {
-
-    @Autowired
-    val deployedServicesRepository: DeployedServicesRepository = mock()
-    @Autowired
-    val deploymentService = DeploymentService(deployedServicesRepository, serviceMapper)
-
-    @Autowired
-    val deploymentController: DeploymentController = DeploymentController(deploymentService)
-
-    lateinit var mockMvc: MockMvc
+class DeploymentServiceTest(@Autowired val deployedServicesRepository: DeployedServicesRepository, @Autowired val deploymentService: DeploymentService) {
 
     @BeforeTest
     fun before() {
-        mockMvc = MockMvcBuilders.standaloneSetup(deploymentController).build()
+        deployedServicesRepository.deleteAll()
+        deployedServicesRepository.flush()
     }
-
-    private val repository: DeployedServicesRepository = mock(DeployedServicesRepository::class.java)
-    private val service = DeploymentService(repository, serviceMapper)
 
     @Test
-    fun `test deployService returns conflict on duplicate message`() {
-        val inboundMessage = InboundMessage("ServiceA", 1, LocalDateTime.now())
-        `when`(repository.existsBySystemVersionNumberAndNameAndVersion(anyInt(), anyString(), anyInt()))
-            .thenReturn(true)
+    fun `Should respond with new system version number and persist when no previous service is deployed`() {
+        val inboundMessage = InboundMessage("ServiceA", 1)
 
-        val response = service.deployService(inboundMessage)
+        val response = deploymentService.deployService(inboundMessage)
 
-        assertEquals(HttpStatus.CONFLICT, response.statusCode)
+        val systemVersionNumber = 1
+        response.statusCode shouldBe HttpStatus.CREATED
+        response.body shouldBe systemVersionNumber
+        deployedServicesRepository.count() shouldBe 1
     }
+
+    @Test
+    fun `Should respond with current system version number and not persist when service is already deployed`() {
+        val inboundMessage = InboundMessage("ServiceA", 1)
+
+        val firstResponse = deploymentService.deployService(inboundMessage)
+
+        val systemVersionNumber = 1
+        firstResponse.statusCode shouldBe HttpStatus.CREATED
+        firstResponse.body shouldBe systemVersionNumber
+        deployedServicesRepository.count() shouldBe 1
+
+        val secondResponse = deploymentService.deployService(inboundMessage)
+
+
+        secondResponse.statusCode shouldBe HttpStatus.CONFLICT
+        secondResponse.body shouldBe systemVersionNumber
+        deployedServicesRepository.count() shouldBe 1
+    }
+
+    @Test
+    fun `Should respond with new system version number and update currently deployed services when a new service is deployed`() {
+
+        val firstMessage = InboundMessage("ServiceA", 1)
+        val secondMessage = InboundMessage("ServiceB", 2)
+
+        val firstResponse = deploymentService.deployService(firstMessage)
+
+        val initialSystemVersionNumber = 1
+        assertEquals(HttpStatus.CREATED,  firstResponse.statusCode)
+        assertEquals(initialSystemVersionNumber, firstResponse.body)
+
+        val secondResponse = deploymentService.deployService(secondMessage)
+
+        val updatedSystemVersionNumber = 2
+        assertEquals(HttpStatus.CREATED,  secondResponse.statusCode)
+        assertEquals(updatedSystemVersionNumber, secondResponse.body)
+
+    }
+
 }

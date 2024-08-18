@@ -16,7 +16,8 @@ import kotlin.test.Test
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @WithMockUser
-class DeploymentControllerTest(@Autowired val deployedServicesRepository: DeployedServicesRepository,
+class DeploymentControllerTest(
+    @Autowired val deployedServicesRepository: DeployedServicesRepository,
     @Autowired val deploymentController: DeploymentController
 ) {
 
@@ -30,7 +31,7 @@ class DeploymentControllerTest(@Autowired val deployedServicesRepository: Deploy
     }
 
     @Test
-    fun `Should respond with new system version number and persist when no previous service is deployed`() {
+    fun `When a post with a valid service not previously deployed is received, should persist and respond with new system version number `() {
         val message = "{\"name\": \"Service A\",\"version\": 1}"
         mockMvc.post("/deploy") {
             contentType = MediaType.APPLICATION_JSON
@@ -42,25 +43,7 @@ class DeploymentControllerTest(@Autowired val deployedServicesRepository: Deploy
     }
 
     @Test
-    fun `Should respond with current system version number and not persist when duplicate service is deployed`() {
-        val message = "{\"name\": \"Service A\",\"version\": 1}"
-
-        mockMvc.post("/deploy") {
-            contentType = MediaType.APPLICATION_JSON
-            content = message
-        }.andExpect { status { isCreated() } }
-
-        mockMvc.post("/deploy") {
-            contentType = MediaType.APPLICATION_JSON
-            content = message
-        }.andExpect { status { isConflict() } }
-
-        deployedServicesRepository.count() shouldBe 1
-
-    }
-
-    @Test
-    fun `Should respond with new system version number and update currently deployed services when a new service is deployed`() {
+    fun `When multiple valid post for different services are received, should update currently deployed services, persist and respond with new system version number`() {
         val firstMessage = "{\"name\": \"Service A\",\"version\": 1}"
         val secondMessage = "{\"name\": \"Service B\",\"version\": 2}"
 
@@ -87,7 +70,25 @@ class DeploymentControllerTest(@Autowired val deployedServicesRepository: Deploy
     }
 
     @Test
-    fun `Should respond with bad request when no name present on message`() {
+    fun `When a post with a duplicate service is received, should not persist and respond with current system version number`() {
+        val message = "{\"name\": \"Service A\",\"version\": 1}"
+
+        mockMvc.post("/deploy") {
+            contentType = MediaType.APPLICATION_JSON
+            content = message
+        }.andExpect { status { isCreated() } }
+
+        mockMvc.post("/deploy") {
+            contentType = MediaType.APPLICATION_JSON
+            content = message
+        }.andExpect { status { isConflict() } }
+
+        deployedServicesRepository.count() shouldBe 1
+
+    }
+
+    @Test
+    fun `When a post with no name is received, should respond with bad request`() {
         val message = "{\"version\": 1}"
         mockMvc.post("/deploy") {
             contentType = MediaType.APPLICATION_JSON
@@ -98,7 +99,7 @@ class DeploymentControllerTest(@Autowired val deployedServicesRepository: Deploy
     }
 
     @Test
-    fun `Should respond with bad request when name is empty on message`() {
+    fun `When a post with blank name is received, should respond with bad request`() {
         val message = "{\"name\": \"\",\"version\": 0}"
         mockMvc.post("/deploy") {
             contentType = MediaType.APPLICATION_JSON
@@ -109,7 +110,7 @@ class DeploymentControllerTest(@Autowired val deployedServicesRepository: Deploy
     }
 
     @Test
-    fun `Should respond with bad request when no version present on message`() {
+    fun `When a post with no version is received, should respond with bad request`() {
         val message = "{\"name\": \"Service A\"}"
         mockMvc.post("/deploy") {
             contentType = MediaType.APPLICATION_JSON
@@ -120,7 +121,7 @@ class DeploymentControllerTest(@Autowired val deployedServicesRepository: Deploy
     }
 
     @Test
-    fun `Should respond with bad request when both name and version are not present on message`() {
+    fun `When a post with no name and no version is receive, should respond with bad request`() {
         val message = "{}"
         mockMvc.post("/deploy") {
             contentType = MediaType.APPLICATION_JSON
@@ -131,7 +132,7 @@ class DeploymentControllerTest(@Autowired val deployedServicesRepository: Deploy
     }
 
     @Test
-    fun `Should respond with bad request when version is less than 1 on message`() {
+    fun `When a post with a version less than 1 is received, should respond with bad request`() {
         val message = "{\"name\": \"Service A\",\"version\": 0}"
         mockMvc.post("/deploy") {
             contentType = MediaType.APPLICATION_JSON
@@ -143,7 +144,7 @@ class DeploymentControllerTest(@Autowired val deployedServicesRepository: Deploy
     }
 
     @Test
-    fun `Should respond with bad request when version is empty on message`() {
+    fun `When a post with blank version is received, should respond with bad request`() {
         val message = "{\"name\": \"Service A\",\"version\": }"
         mockMvc.post("/deploy") {
             contentType = MediaType.APPLICATION_JSON
