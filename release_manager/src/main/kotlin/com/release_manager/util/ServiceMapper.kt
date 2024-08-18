@@ -11,7 +11,6 @@ import java.time.LocalDateTime
 @Slf4j
 class ServiceMapper {
 
-    //todo test
     fun mapServices(
         systemVersionNumber: Int,
         currentlyDeployedServices: List<InternalService>,
