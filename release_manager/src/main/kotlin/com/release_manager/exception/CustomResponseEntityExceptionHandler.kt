@@ -12,7 +12,7 @@ import org.springframework.web.context.request.WebRequest
 import org.springframework.web.method.annotation.HandlerMethodValidationException
 
 @RestControllerAdvice
-class CustomResponseEntityExceptionHandler
+class CustomResponseEntityExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleMethodValidationErrors(
@@ -37,4 +37,4 @@ class CustomResponseEntityExceptionHandler
         return ResponseEntity(errorDetails, HttpHeaders(), HttpStatus.BAD_REQUEST)
     }
 
-
+}
