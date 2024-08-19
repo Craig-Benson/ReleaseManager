@@ -1,6 +1,7 @@
 package com.release_manager.service
 
 import com.release_manager.model.internal.InternalService
+import com.release_manager.model.outbound.OutboundMessage
 import com.release_manager.repository.DeployedServicesRepository
 import io.kotest.matchers.shouldBe
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,24 +29,27 @@ class RetrievalServiceTest(
 
 
     @Test
-    fun `Should respond with serviced when no matching service has been deployed`() {
+    fun `Should respond with Ok status when no matching service has been deployed`() {
         deployedServicesRepository.save(InternalService(1, "Service A", 1, LocalDateTime.now()))
         val response = retrievalService.retrieveServicesWithSystemVersionNumber(1)
 
+        val expectedResponse = arrayListOf(OutboundMessage("Service A", 1))
         response.statusCode shouldBe HttpStatus.OK
+        response.body shouldBe expectedResponse
     }
 
     @Test
-    fun `Should respond with not found when no matching service has been deployed`() {
+    fun `Should respond with Not found status when no matching service has been deployed`() {
         val response = retrievalService.retrieveServicesWithSystemVersionNumber(1)
 
         response.statusCode shouldBe HttpStatus.NOT_FOUND
-        deployedServicesRepository.count() shouldBe 0
     }
 
     @Test
-    fun `Should respond with Internal server error when invalid system version number queried`() {
+    fun `Should respond with Internal server error status when invalid system version number queried`() {
         val response = retrievalService.retrieveServicesWithSystemVersionNumber(-1)
+
         response.statusCode shouldBe HttpStatus.INTERNAL_SERVER_ERROR
+
     }
 }

@@ -52,10 +52,10 @@ class DeploymentService(
             return ResponseEntity.status(HttpStatus.CONFLICT).body(systemVersionNumber)
         } catch (ex: DataAccessException) {
             logger.error("Data access violation while deploying service. ${ex.message}")
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(-1)
+            return ResponseEntity.internalServerError().build()
         } catch (ex: Exception) {
             logger.error("Unexpected error while deploying service: ${ex.message}")
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(-1)
+            return ResponseEntity.internalServerError().build()
         }
     }
 
